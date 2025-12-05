@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>調達検索ロボット Version0.6</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .required {
+            color: red;
+            margin-left: 5px;
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Robot Animation */
+        .robot-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .robot-head {
+            width: 40px;
+            height: 35px;
+            background: #555;
+            border-radius: 6px;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            z-index: 2;
+            animation: robot-nod 1s infinite ease-in-out;
+        }
+
+        .robot-eye {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            /* Green LED eyes */
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .eye-left {
+            left: 8px;
+        }
+
+        .eye-right {
+            right: 8px;
+        }
+
+        .robot-body {
+            width: 30px;
+            height: 20px;
+            background: #777;
+            position: absolute;
+            top: 45px;
+            left: 25px;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .document {
+            width: 25px;
+            height: 35px;
+            background: #fff;
+            border: 1px solid #ccc;
+            position: absolute;
+            top: 30px;
+            left: 45px;
+            z-index: 3;
+            animation: doc-check 1s infinite linear;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .doc-line {
+            height: 2px;
+            background: #ddd;
+            margin: 4px 3px;
+        }
+
+        @keyframes robot-nod {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(2px);
+            }
+        }
+
+        @keyframes doc-check {
+            0% {
+                transform: translate(10px, 10px) rotate(-10deg);
+                opacity: 0;
+            }
+
+            20% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+
+            80% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-10px, 10px) rotate(10deg);
+                opacity: 0;
+            }
+        }
+
+        .version {
+            font-size: 0.5em;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>調達検索ロボット <span class="version">Version0.6</span></h1>
+
+    <div class="search-container">
+        <div class="form-group">
+            <label>検索対象</label>
+            <div>
+                <label style="display: inline-block; margin-right: 15px; font-weight: normal;">
+                    <input type="checkbox" id="sourceGov" value="gov" checked> 政府ポータル
+                </label>
+                <label style="display: inline-block; margin-right: 15px; font-weight: normal;">
+                    <input type="checkbox" id="sourceTokyo" value="tokyo" checked> 東京都
+                </label>
+                <label style="display: inline-block; font-weight: normal;">
+                    <input type="checkbox" id="sourceKanagawa" value="kanagawa" checked> 神奈川県
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="freeText">会社概要・検索ニーズ (自由記述)</label>
+            <textarea id="freeText" placeholder="例: 東京都で道路舗装工事を行っている建設会社です。公共工事の入札情報を探しています。" rows="4"></textarea>
+        </div>
+        <button onclick="search()">検索</button>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="robot-container">
+            <div class="robot-head">
+                <div class="robot-eye eye-left"></div>
+                <div class="robot-eye eye-right"></div>
+            </div>
+            <div class="robot-body"></div>
+            <div class="document">
+                <div class="doc-line"></div>
+                <div class="doc-line"></div>
+                <div class="doc-line"></div>
+            </div>
+        </div>
+        <div id="loadingText">検索中... (これには時間がかかります)</div>
+    </div>
+
+    <div id="searchLogs"
+        style="display: none; background-color: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+        <h3 style="margin-top: 0; font-size: 1.1em; color: #333;">🤖 AIの思考プロセス</h3>
+        <ul id="logList"
+            style="list-style-type: none; padding-left: 0; margin-bottom: 0; font-size: 0.9em; color: #555;">
+            <!-- Logs will be inserted here -->
+        </ul>
+    </div>
+
+    <table id="resultsTable">
+        <thead>
+            <tr>
+                <th>案件名</th>
+                <th>機関</th>
+                <th>期限</th>
+                <th>カテゴリ</th>
+                <th>ソース</th>
+                <th>リンク</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Results will be inserted here -->
+        </tbody>
+    </table>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
