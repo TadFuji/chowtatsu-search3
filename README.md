@@ -9,16 +9,50 @@
 *   **AI思考プロセス可視化**: AIがどのようなキーワードで検索しているかをリアルタイムで表示。
 
 ## 動作環境
-*   Windows
-*   Python 3.x
-*   Google Chrome (Selenium利用のため)
+*   Windows / Mac / Linux
+*   Python 3.8+
+*   Playwright (ブラウザ操作用)
+*   Google Chrome / Chromium
 
-## 起動方法
-フォルダ内の `start.bat` をダブルクリックしてください。
+## ユーザー向け起動方法
+Windowsの方は、フォルダ内の `start.bat` をダブルクリックしてください。
 バックエンドサーバーが立ち上がり、自動的にブラウザが開きます。
 
 詳しい使い方は [取扱説明書.md](./取扱説明書.md) をご覧ください。
 
+## 開発者向け (For Developers)
+
+### セットアップ
+このプロジェクトは Python (Backend) と標準的な HTML/JS (Frontend) で構成されています。
+
+1.  **リポジトリのクローン**
+    ```bash
+    git clone https://github.com/TadFuji/chowtatsu-search3.git
+    cd chowtatsu-search3
+    ```
+
+2.  **依存ライブラリのインストール**
+    ```bash
+    cd backend
+    pip install -r requirements.txt
+    playwright install
+    ```
+    ※ `.env` ファイルが必要な場合は、`backend/.env` に作成し、必要なAPIキー（Google Gemini APIなど）を設定してください。
+
+### 起動
+1.  **バックエンドの起動**
+    ```bash
+    cd backend
+    python main.py
+    # または uvicorn main:app --reload
+    ```
+
+2.  **フロントエンドの起動**
+    `frontend/index.html` をブラウザで直接開いてください。
+
 ## 構成
-*   `backend/`: Pythonによる検索エンジン・スクレイピング処理
-*   `frontend/`: 検索用Webインターフェース
+*   `backend/`: Python (FastAPI/Uvicorn) による検索エンジン・スクレイピング処理
+*   `frontend/`: 検索用Webインターフェース (Vanilla JS + HTML)
+
+## ライセンス
+[MIT License](./LICENSE)
